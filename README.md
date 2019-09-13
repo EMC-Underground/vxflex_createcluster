@@ -1,8 +1,7 @@
 Role Name
 =========
 
-A brief description of the role goes here.
-
+Ansible Galaxy Role to install default software on the MDM nodes in a vxFlex Cluster.
 Requirements
 ------------
 
@@ -23,9 +22,16 @@ Example Playbook
 
 Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
 
-    - hosts: servers
+    - hosts: all
+      become: true
+      vars_files:
+        - ./vars/vars.yml
       roles:
-         - { role: username.rolename, x: 42 }
+      - role: ericsysmin.chrony
+        chrony_config_server:
+          - "{{ ntp_server }}"
+     - role: vxflex_mdminstall_all
+
 
 License
 -------
@@ -35,4 +41,4 @@ BSD
 Author Information
 ------------------
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+Brad Soper and Craig Smith
