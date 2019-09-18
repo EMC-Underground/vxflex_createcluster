@@ -93,7 +93,7 @@
       - 201
       - 202
   register: results
-  ignore_errors: yes
+#  ignore_errors: yes
   changed_when: results.json.errorCode == 446
 - debug:
     var: results
