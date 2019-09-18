@@ -97,6 +97,10 @@
   changed_when: results.json.errorCode == 446
 - debug:
     var: results
+- debug:
+    var: results.json.errorCode
+
+
 
 - name: "Query MDM Cluster to get Ids"
   uri:
