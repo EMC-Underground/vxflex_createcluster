@@ -93,8 +93,9 @@
       - 201
       - 202
   register: results
-  changed_when: results.errorCode == 446
-
+#  changed_when: results.errorCode == 446
+- debug:
+  var: results
 
 - name: "Query MDM Cluster to get Ids"
   uri:
