@@ -93,7 +93,7 @@
       - 201
       - 202
   register: results
-  when: errorCode == 446
+  changed_when: results.errorCode == 446
 
 
 - name: "Query MDM Cluster to get Ids"
