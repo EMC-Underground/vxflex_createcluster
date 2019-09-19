@@ -94,9 +94,8 @@
       - 202
   register: results
   ignore_errors: yes
-  changed_when: "results.json.errorCode == 446"
-- debug:
-    var: results.stderr
+  failed_when: not (results.json.errorCode == 0 or results.json.errorCode == 446)
+# changed_when: "results.json.errorCode == 446"
 - debug:
     var: results.json.errorCode
 
