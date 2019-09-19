@@ -110,8 +110,6 @@
       - 201
       - 202
   register: output
-- debug:
-    var: output
 
 - name: "Query to see if cluster is set at 3 node"
   expect:
