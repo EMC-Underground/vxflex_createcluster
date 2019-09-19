@@ -137,3 +137,4 @@
       - 200
       - 201
       - 202
+  when: "cluster_results.rc == 7"
