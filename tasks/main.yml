@@ -93,7 +93,6 @@
       - 201
       - 202
   register: results
-  ignore_errors: yes
   failed_when: not (results.json.errorCode == 0 or results.json.errorCode == 446)
 
 
@@ -111,14 +110,14 @@
       - 202
   register: output
 
-- name: "Query to see if cluster is set at 3 node"
-  expect:
-    command: scli --query_cluster
-    responses:
-      "Press 'y' to approve this certificate and add it to the truststore": "y"
-  register: cluster_results
-  failed_when: not (cluster_results.rc == 0 or cluster_results.rc == 7)
-  changed_when: not (cluster_results.rc == 0 or cluster_results.rc == 7)
+#- name: "Query to see if cluster is set at 3 node"
+#  expect:
+#    command: scli --query_cluster
+#    responses:
+#      "Press 'y' to approve this certificate and add it to the truststore": "y"
+#  register: cluster_results
+#  failed_when: not (cluster_results.rc == 0 or cluster_results.rc == 7)
+#  changed_when: not (cluster_results.rc == 0 or cluster_results.rc == 7)
 
 
 - name: "Change to 3 node cluster"
