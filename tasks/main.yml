@@ -95,11 +95,11 @@
       - 202
       - 446
   register: results
+# failed_when: not (results.status == 0 or results.status == 446)
 
-  - name: results stiff
-    debug:
-      var: results
-  # failed_when: not (results.status == 0 or results.status == 446)
+- name: "results stuff"
+  debug:
+    var: results
 
 
 - name: "Query MDM Cluster to get Ids"
