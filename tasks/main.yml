@@ -93,8 +93,9 @@
       - 200
       - 201
       - 202
+      - 446
   register: results
-  failed_when: not (results.json.errorCode == 0 or results.json.errorCode == 446)
+#  failed_when: not (results.json.errorCode == 0 or results.json.errorCode == 446)
 
 
 - name: "Query MDM Cluster to get Ids"
