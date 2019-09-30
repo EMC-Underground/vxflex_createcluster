@@ -94,6 +94,7 @@
       - 201
       - 202
       - 446
+      - 500
   register: results
 # failed_when: not (results.status == 0 or results.status == 446)
 
