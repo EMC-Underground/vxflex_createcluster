@@ -126,7 +126,7 @@
     method: POST
     user: "{{ vxflex_gateway_username }}"
     password: "{{ msg.json }}"
-    body: {"mode":"ThreeNodes","addSlaveMdmIdList":["{{ output.json.standbyMDMs[0].id }}"],"addTBIdList":["{{ output.json.standbyMDMs [1].id }}"]}
+    body: {"mode":"ThreeNodes","addSlaveMdmIdList":["{{ output.json.standbyMDMs[0].id }}"],"addTBIdList":["{{ output.json.standbyMDMs[1].id }}"]}
     force_basic_auth: yes
     body_format: json
     validate_certs: False
