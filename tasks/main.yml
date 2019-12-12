@@ -3,7 +3,7 @@
     command: scli --query_cluster
     responses:
       "Press 'y' to approve this certificate and add it to the truststore": "y"
-    register: cluster_results
+  register: cluster_results
   failed_when: not (cluster_results.rc == 0 or cluster_results.rc == 7)
   changed_when: not (cluster_results.rc == 0 or cluster_results.rc == 7)
   ignore_errors: yes
