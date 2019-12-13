@@ -10,6 +10,8 @@
 
 - debug:
     var: cluster_results
+  tags:
+    - debug
 
 - name: "Create New MDM Cluster"
   shell: 'scli --create_mdm_cluster --master_mdm_ip {{ vxflex_master_mdm_ip | join(",") }} --master_mdm_management_ip {{ vxflex_master_mdm_mgmt_ip | join(",") }} --master_mdm_name {{ vxflex_master_mdm_name }} --cluster_virtual_ip {{ vxflex_vip_ip }} --master_mdm_virtual_ip_interface {{ ansible_default_ipv4.interface }} --accept_license --approve_certificate'
@@ -100,9 +102,11 @@
       - 500
   register: tiebreaker_results
 
-- name: "results stuff"
+- name: "MDM Cluster creation results"
   debug:
     var: results
+  tags:
+    - debug
 
 
 - name: "Query MDM Cluster to get Ids"
@@ -119,6 +123,11 @@
       - 202
   register: output
 
+- name: "MDM Cluster Ids output"
+  debug:
+    var: output
+  tags:
+    - debug
 
 - name: "Change to 3 node cluster"
   uri:
