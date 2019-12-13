@@ -103,7 +103,7 @@
     method: POST
     user: "{{ vxflex_gateway_username }}"
     password: "{{ msg.json }}"
-    body: {"ips":"{{ vxflex_tiebreaker_mdm_ip }}","managementIps":"{{ vxflex_tiebreaker_mdm_mgmt_ip }}","virtIpIntfs":["{{ ansible_default_ipv4.interface }}"],"name":"{{ vxflex_tiebreaker_mdm_name }}","role":"TieBreaker"}
+    body: {"ips":"{{ vxflex_tiebreaker_mdm_ip }}","managementIps":"{{ vxflex_tiebreaker_mdm_mgmt_ip }}","name":"{{ vxflex_tiebreaker_mdm_name }}","role":"TieBreaker"}
     force_basic_auth: yes
     body_format: json
     validate_certs: False
