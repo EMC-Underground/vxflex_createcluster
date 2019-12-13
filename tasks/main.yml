@@ -91,6 +91,12 @@
   tags:
     - debug
 
+- name: "Print out list of mdm IP addresses"
+  debug:
+    var: vxflex_standby_mdm_ip
+  tags:
+    - debug
+
 - name: "Add TieBreaker MDM to cluster"
   uri:
     url: https://{{ vxflex_gateway_ip }}:{{ vxflex_gateway_https_port }}/api/instances/System/action/addStandbyMdm
@@ -108,6 +114,12 @@
       - 446
       - 500
   register: tiebreaker_results
+
+- name: "Print out adding tiebreaker results"
+  debug:
+    var: tiebreaker_results
+  tags:
+    - debug
 
 - name: "MDM Cluster creation results"
   debug:
