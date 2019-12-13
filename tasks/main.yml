@@ -74,7 +74,7 @@
     method: POST
     user: "{{ vxflex_gateway_username }}"
     password: "{{ msg.json }}"
-    body: {"ips": "{{ vxflex_standby_mdm_ip }}","managementIps":"{{ vxflex_standby_mdm_mgmt_ip }}","name":"{{ vxflex_standby_mdm_name }}","role":"Manager"}
+    body: {"ips": "{{ vxflex_standby_mdm_ip }}","managementIps":"{{ vxflex_standby_mdm_mgmt_ip }}","virtIpIntfs":["{{ ansible_default_ipv4.interface }}"],"name":"{{ vxflex_standby_mdm_name }}","role":"Manager"}
     force_basic_auth: yes
     body_format: json
     validate_certs: False
