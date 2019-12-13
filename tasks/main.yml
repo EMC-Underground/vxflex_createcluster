@@ -83,6 +83,13 @@
       - 201
       - 202
       - 500
+  register: add_standby
+
+- name: "Display standby add results"
+  debug:
+    var: add_standby
+  tags:
+    - debug
 
 - name: "Add TieBreaker MDM to cluster"
   uri:
