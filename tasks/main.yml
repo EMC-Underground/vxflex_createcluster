@@ -98,7 +98,7 @@
       - 202
       - 446
       - 500
-  register: results
+  register: tiebreaker_results
 
 - name: "results stuff"
   debug:
