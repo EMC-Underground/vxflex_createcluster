@@ -21,7 +21,7 @@
     mdm_public_ip: "{{ ansible_facts['all_ipv4_addresses'] | ipaddr( vxflex_mdm_public_cidr ) }}"
 
 - name: "Create New MDM Cluster"
-  shell: 'scli --create_mdm_cluster --master_mdm_ip {{ mdm_public_ip | join(",") }} --master_mdm_management_ip {{ mdm_private_ip | join(",") }} --master_mdm_name {{ ansible_facts['nodename'] }} --cluster_virtual_ip {{ vxflex_vip_ip }} --master_mdm_virtual_ip_interface {{ ansible_default_ipv4.interface }} --accept_license --approve_certificate'
+  shell: 'scli --create_mdm_cluster --master_mdm_ip {{ mdm_public_ip | join(",") }} --master_mdm_management_ip {{ mdm_private_ip | join(",") }} --master_mdm_name {{ ansible_facts["nodename"] }} --cluster_virtual_ip {{ vxflex_vip_ip }} --master_mdm_virtual_ip_interface {{ ansible_default_ipv4.interface }} --accept_license --approve_certificate'
   register: results
   when: ("cluster_results.rc == 7" and "'master' in group_names")
   changed_when: (cluster_results.rc == 7 or cluster_results.rc == 0)
