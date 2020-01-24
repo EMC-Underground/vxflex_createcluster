@@ -64,7 +64,8 @@
 
 - name: "Get ScaleIO token for Auth"
   uri:
-    url: https://{{ vxflex_gateway_ip }}:{{ vxflex_gateway_https_port }}/api/login
+    url: "https://{{ vxflex_gateway_ip }}:{{ vxflex_gateway_https_port }}\
+    /api/login"
     return_content: yes
     user: "{{ vxflex_gateway_username }}"
     password: "{{ vxflex_gateway_pw }}"
@@ -81,11 +82,16 @@
 
 - name: "Add Standby MDM to cluster"
   uri:
-    url: https://{{ vxflex_gateway_ip }}:{{ vxflex_gateway_https_port }}/api/instances/System/action/addStandbyMdm
+    url: "https://{{ vxflex_gateway_ip }}:{{ vxflex_gateway_https_port }}\
+    /api/instances/System/action/addStandbyMdm"
     method: POST
     user: "{{ vxflex_gateway_username }}"
     password: "{{ msg.json }}"
-    body: {"ips": "{{ mdm_private_ip }}","managementIps":"{{ mdm_public_ip }}","virtIpIntfs":["{{ ansible_default_ipv4.interface }}"],"name":"{{ ansible_facts['nodename'] }}","role":"Manager"}
+    body: {"ips": "{{ mdm_private_ip }}",
+    "managementIps":"{{ mdm_public_ip }}",
+    "virtIpIntfs":["{{ ansible_default_ipv4.interface }}"],
+    "name":"{{ ansible_facts['nodename'] }}",
+    "role":"Manager"}
     force_basic_auth: yes
     body_format: json
     validate_certs: False
@@ -117,11 +123,15 @@
 
 - name: "Add TieBreaker MDM to cluster"
   uri:
-    url: https://{{ vxflex_gateway_ip }}:{{ vxflex_gateway_https_port }}/api/instances/System/action/addStandbyMdm
+    url: "https://{{ vxflex_gateway_ip }}:{{ vxflex_gateway_https_port }}\
+    /api/instances/System/action/addStandbyMdm"
     method: POST
     user: "{{ vxflex_gateway_username }}"
     password: "{{ msg.json }}"
-    body: {"ips":"{{ mdm_private_ip }}","managementIps":"{{ mdm_public_ip }}","name":"{{ ansible_facts['nodename'] }}","role":"TieBreaker"}
+    body: {"ips":"{{ mdm_private_ip }}",
+    "managementIps":"{{ mdm_public_ip }}",
+    "name":"{{ ansible_facts['nodename'] }}",
+    "role":"TieBreaker"}
     force_basic_auth: yes
     body_format: json
     validate_certs: False
@@ -153,7 +163,8 @@
 
 - name: "Query MDM Cluster to get Ids"
   uri:
-    url: https://{{ vxflex_gateway_ip }}:{{ vxflex_gateway_https_port }}/api/instances/System/queryMdmCluster
+    url: "https://{{ vxflex_gateway_ip }}:{{ vxflex_gateway_https_port }}\
+    /api/instances/System/queryMdmCluster"
     return_content: yes
     method: POST
     body: {}
@@ -179,11 +190,14 @@
 
 - name: "Change to 3 node cluster"
   uri:
-    url: https://{{ vxflex_gateway_ip }}:{{ vxflex_gateway_https_port }}/api/instances/System/action/switchClusterMode
+    url: "https://{{ vxflex_gateway_ip }}:{{ vxflex_gateway_https_port }}\
+    /api/instances/System/action/switchClusterMode"
     method: POST
     user: "{{ vxflex_gateway_username }}"
     password: "{{ msg.json }}"
-    body: {"mode":"ThreeNodes","addSlaveMdmIdList":["{{ output.json.standbyMDMs[0].id }}"],"addTBIdList":["{{ output.json.standbyMDMs[1].id }}"]}
+    body: {"mode":"ThreeNodes",
+    "addSlaveMdmIdList":["{{ output.json.standbyMDMs[0].id }}"],
+    "addTBIdList":["{{ output.json.standbyMDMs[1].id }}"]}
     force_basic_auth: yes
     body_format: json
     validate_certs: False
