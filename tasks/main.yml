@@ -107,9 +107,9 @@
     sl: "slaves[?contains(name, '{{ ansible_facts.nodename }}')]"
   when:
     - "'standby' in group_names"
-    - ("master_output.status == 428" or
-    "added_standby|length == 0" or
-    "added_slave|length ==0")
+    - ("master_output.status == 428") or
+      ("added_standby|length == 0") or
+      ("added_slave|length == 0")
   changed_when: add_standby.status == 200
   tags:
     - create_cluster
@@ -147,9 +147,9 @@
     tb: "tieBreakers[?contains(name, '{{ ansible_facts.nodename }}')]"
   when:
     - "'tiebreaker' in group_names"
-    - ("master_output.status == 428" or
-    "added_standby|length == 0" or
-    "added_tiebreaker|length ==0")
+    - ("master_output.status == 42)") or
+      ("added_standby|length == 0") or
+      ("added_tiebreaker|length ==0")
   tags:
     - create_cluster
 
@@ -175,8 +175,8 @@
   register: output
   run_once: True
   when:
-    - ("master_output.status == 428" or
-    "master_output.json.clusterMode == 'OneNode'")
+    - ("master_output.status == 428") or
+      ("master_output.json.clusterMode == 'OneNode'")
   tags:
     - create_cluster
 
@@ -207,8 +207,8 @@
   register: cluster_output
   changed_when: "cluster_output.status == 200"
   when:
-    - ("master_output.json.clusterMode == 'OneNode'" or
-    "master_output.status == 428")
+    - ("master_output.json.clusterMode == 'OneNode'") or
+      ("master_output.status == 428")
     - "output.json.standbyMDMs|length > 1"
   tags:
     - create_cluster
