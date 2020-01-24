@@ -1,69 +1,66 @@
-- name: "Query to see if cluster exists"
-  expect:
-    command: scli --query_cluster
-    responses:
-      "Press 'y' to approve this certificate and add it to the truststore": "y"
-  register: cluster_results
-  failed_when: not (cluster_results.rc == 0 or cluster_results.rc == 7)
-  run_once: True
-
-- debug:
-    var: cluster_results
-  tags:
-    - debug
-
-- name: "Find MDM Private Ip's"
-  set_fact:
-    mdm_private_ip: "{{ ansible_facts['all_ipv4_addresses'] | ipaddr( vxflex_mdm_cidr ) }}"
-
-- name: "Find MDM Public Ip's"
-  set_fact:
-    mdm_public_ip: "{{ ansible_facts['all_ipv4_addresses'] | ipaddr( vxflex_mdm_public_cidr ) }}"
-
-- name: "Create New MDM Cluster"
-  shell: 'scli --create_mdm_cluster --master_mdm_ip {{ mdm_private_ip | join(",") }} --master_mdm_management_ip {{ mdm_public_ip | join(",") }} --master_mdm_name {{ ansible_facts["nodename"] }} --cluster_virtual_ip {{ vxflex_vip_ip }} --master_mdm_virtual_ip_interface {{ ansible_default_ipv4.interface }} --accept_license --approve_certificate'
-  register: results
-  when:
-    - "cluster_results.rc == 7"
-    - "'master' in group_names"
-  changed_when: (cluster_results.rc == 7 or cluster_results.rc == 0)
-
-
-- name: "Get ScaleIO token for Auth"
+- name: "Query MDM Cluster to get Ids"
   uri:
-    url: https://{{ vxflex_gateway_ip }}:{{ vxflex_gateway_https_port }}/api/login
+    url: "https://{{ vxflex_gateway_ip }}:{{ vxflex_gateway_https_port }}\
+    /api/instances/System/queryMdmCluster"
     return_content: yes
-    user: "{{ vxflex_gateway_username }}"
-    password: "admin"
-    force_basic_auth: yes
-    validate_certs: False
-    status_code:
-      - 200
-      - 201
-      - 202
-  register: basic_auth
-  ignore_errors: yes
-  failed_when: not (basic_auth.status == 200 or basic_auth.status == 401)
-  run_once: True
-
-- name: "Change Admin Password"
-  uri:
-    url: https://{{ vxflex_gateway_ip }}:{{ vxflex_gateway_https_port }}/api/instances/User/action/setPassword
     method: POST
-    user: "{{ vxflex_gateway_username }}"
-    password: "{{ basic_auth.json }}"
-    body: {"oldPassword":"{{ vxflex_gateway_username }}", "newPassword":"{{ vxflex_gateway_pw }}"}
-    force_basic_auth: yes
+    body: {}
     body_format: json
     validate_certs: False
     status_code:
       - 200
       - 201
       - 202
-  when: basic_auth.status == 200
-  changed_when: basic_auth.status == 200
+      - 428
+  register: master_output
   run_once: True
+  tags:
+    - create_cluster
 
+- debug:
+    var: master_output
+  tags:
+    - [ never, debug ]
+
+- name: "Find MDM Private Ip's"
+  set_fact:
+    mdm_private_ip: "{{ ansible_facts['all_ipv4_addresses'] | \
+    ipaddr( vxflex_mdm_cidr ) }}"
+  tags:
+    - create_cluster
+
+- name: "Find MDM Public Ip's"
+  set_fact:
+    mdm_public_ip: "{{ ansible_facts['all_ipv4_addresses'] | \
+    ipaddr( vxflex_mdm_public_cidr ) }}"
+  tags:
+    - create_cluster
+
+- debug:
+    var: mdm_private_ip
+  tags:
+    - [ never, debug ]
+
+- debug:
+    var: mdm_public_ip
+  tags:
+    - [ never, debug ]
+
+- name: "Add MDM Master"
+  shell: 'scli --create_mdm_cluster \
+  --master_mdm_ip {{ mdm_private_ip | join(",") }} \
+  --master_mdm_management_ip {{ mdm_public_ip | join(",") }} \
+  --master_mdm_name {{ ansible_facts["nodename"] }} \
+  --cluster_virtual_ip {{ vxflex_vip_ip }} \
+  --master_mdm_virtual_ip_interface {{ ansible_default_ipv4.interface }} \
+  --accept_license \
+  --approve_certificate'
+  register: results
+  when:
+    - "master_output.status == 428"
+    - "'master' in group_names"
+  tags:
+    - create_cluster
 
 - name: "Get ScaleIO token for Auth"
   uri:
@@ -79,6 +76,8 @@
       - 202
   register: msg
   run_once: True
+  tags:
+    - create_cluster
 
 - name: "Add Standby MDM to cluster"
   uri:
@@ -96,7 +95,13 @@
       - 202
       - 500
   register: add_standby
-  when: "'standby' in group_names"
+  when:
+    - "'standby' in group_names"
+    - "master_output.status == 428"
+    - "master_output.json.standbyMDMs is not defined"
+  changed_when: add_standby.status == 200
+  tags:
+    - create_cluster
 
 - name: "Display standby add results"
   debug:
@@ -127,19 +132,23 @@
       - 446
       - 500
   register: tiebreaker_results
-  when: "'tiebreaker' in group_names"
+  when:
+    - "'tiebreaker' in group_names"
+  changed_when: tiebreaker_results.status == 200
+  tags:
+    - create_cluster
 
 - name: "Print out adding tiebreaker results"
   debug:
     var: tiebreaker_results
   tags:
-    - debug
+    - [ never, debug ]
 
 - name: "MDM Cluster creation results"
   debug:
     var: results
   tags:
-    - debug
+    - [ never, debug ]
 
 
 - name: "Query MDM Cluster to get Ids"
@@ -156,12 +165,17 @@
       - 202
   register: output
   run_once: True
+  when:
+    - "master_output.status == 200"
+    - "master_output.json.clusterMode == 'OneNode'"
+  tags:
+    - create_cluster
 
 - name: "MDM Cluster Ids output"
   debug:
     var: output
   tags:
-    - debug
+    - [ never, debug ]
 
 - name: "Change to 3 node cluster"
   uri:
@@ -177,5 +191,11 @@
       - 200
       - 201
       - 202
-  when: "cluster_results.rc == 7"
   run_once: True
+  register: cluster_output
+  changed_when: "cluster_output.status == 200"
+  when:
+    - "master_output.status == 200"
+    - "master_output.json.clusterMode == 'OneNode'"
+  tags:
+    - create_cluster
