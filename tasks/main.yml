@@ -101,6 +101,7 @@
       - 202
   when: basic_auth.status == 200
   changed_when: basic_auth.status == 200
+  run_once: True
   tags:
     - create_cluster
     - change_password
@@ -151,8 +152,7 @@
   when:
     - "'standby' in group_names"
     - ("master_output.status == 428") or
-      ("added_standby|length == 0") or
-      ("added_slave|length == 0")
+      ("added_standby|length == 0" and "added_slave|length == 0")
   changed_when: slave_results.status == 200
   tags:
     - create_cluster
@@ -190,9 +190,8 @@
     tb: "tieBreakers[?contains(name, '{{ ansible_facts.nodename }}')]"
   when:
     - "'tiebreaker' in group_names"
-    - ("master_output.status == 42)") or
-      ("added_standby|length == 0") or
-      ("added_tiebreaker|length ==0")
+    - ("master_output.status == 428") or
+      ("added_standby|length == 0" and "added_tiebreaker|length == 0")
   tags:
     - create_cluster
 
@@ -235,7 +234,7 @@
     /api/instances/System/action/switchClusterMode"
     method: POST
     user: "{{ vxflex_gateway_username }}"
-    password: "{{ msg.json }}"
+    password: "{{ auth.json }}"
     body: {"mode":"ThreeNodes",
     "addSlaveMdmIdList":["{{ output.json.standbyMDMs[0].id }}"],
     "addTBIdList":["{{ output.json.standbyMDMs[1].id }}"]}
@@ -247,11 +246,16 @@
       - 201
       - 202
   run_once: True
+  vars:
+    added_standby: "{{ master_output | to_json | from_json | json_query(sb) }}"
+    added_tiebreaker: "{{ master_output | to_json | from_json | json_query(tb) }}"
+    sb: "standbyMDMs[?contains(name, '{{ ansible_facts.nodename }}')]"
+    tb: "tieBreakers[?contains(name, '{{ ansible_facts.nodename }}')]"
   register: cluster_output
   changed_when: "cluster_output.status == 200"
   when:
     - ("master_output.json.clusterMode == 'OneNode'") or
-      ("master_output.status == 428")
-    - "output.json.standbyMDMs|length > 1"
+      ("master_output.status == 428") or
+      ("output.json.standbyMDMs|length > 1")
   tags:
     - create_cluster
