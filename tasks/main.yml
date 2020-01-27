@@ -68,7 +68,7 @@
     /api/login"
     return_content: yes
     user: "{{ vxflex_gateway_username }}"
-    password: "admin"
+    password: "{{ current_password }}"
     force_basic_auth: yes
     validate_certs: False
     status_code:
@@ -81,6 +81,7 @@
   changed_when: basic_auth.status == 200
   tags:
     - create_cluster
+    - change_password
 
 - name: "Change Admin Password"
   uri:
@@ -89,7 +90,7 @@
     method: POST
     user: "{{ vxflex_gateway_username }}"
     password: "{{ basic_auth.json }}"
-    body: {"oldPassword":"{{ vxflex_gateway_username }}",
+    body: {"oldPassword":"{{ current_password }}",
     "newPassword":"{{ vxflex_gateway_pw }}"}
     force_basic_auth: yes
     body_format: json
@@ -102,6 +103,7 @@
   changed_when: basic_auth.status == 200
   tags:
     - create_cluster
+    - change_password
 
 - name: "Get ScaleIO token for Auth"
   uri:
@@ -151,7 +153,7 @@
     - ("master_output.status == 428") or
       ("added_standby|length == 0") or
       ("added_slave|length == 0")
-  changed_when: add_standby.status == 200
+  changed_when: slave_results.status == 200
   tags:
     - create_cluster
 
