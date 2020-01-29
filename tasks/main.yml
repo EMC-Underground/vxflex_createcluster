@@ -75,8 +75,8 @@
   --approve_certificate'
   register: results
   when:
-    - "inital_output.status == 428"
-    - ansible_facts.ansible_default_ipv4 == Master[0]
+    - "initial_output.status == 428"
+    - ansible_facts.ansible_default_ipv4 == Manager[0]
   tags:
     - create_cluster
 
@@ -261,6 +261,27 @@
     var: cluster_output
   tags:
     - [ never, debug ]
+
+- name: "Count how many managers"
+  set_fact:
+    manager_count: "{{ groups.Manager | length }}"
+  run_once: True
+  tags:
+    - create_cluster
+
+- name: "Count how many tiebreakers"
+  set_fact:
+    tiebreaker_count: "{{ groups.TieBreakers | length }}"
+  run_once: True
+  tags:
+    - create_cluster
+
+- name: "determine cluster mode"
+  set_fact:
+    cluster_mode: ""{{ 'OneNode' if
+  run_once: True
+  tags:
+    - create_cluster
 
 - name: "Change to 3 node cluster"
   uri:
