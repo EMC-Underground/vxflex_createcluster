@@ -12,20 +12,37 @@
       - 201
       - 202
       - 428
-  register: master_output
+  register: initial_output
   run_once: True
+  when: "'mdm' in group_names"
   tags:
     - create_cluster
 
 - debug:
-    var: master_output
+    var: initial_output
   tags:
     - [ never, debug ]
+
+- name: "Determine if node is a manager"
+  set_fact:
+    role: "{{ 'Manager' if (lookup('ini', 'actor_role_is_manager type=properties file=/opt/emc/scaleio/mdm/cfg/conf.txt') | bool) else 'TieBreaker' }}"
+  tags:
+    - create_cluster
+  when: "'mdm' in group_names"
+
+- name: Add "{{ ansible_facts.ansible_default_ipv4 }}" to "{{ role }}"
+  add_host:
+    name: "{{ ansible_facts.ansible_default_ipv4 }}"
+    groups: "{{ role }}"
+  tags:
+    - create_cluster
+  when: "'mdm' in group_names"
 
 - name: "Find MDM Private Ip's"
   set_fact:
     mdm_private_ip: "{{ ansible_facts['all_ipv4_addresses'] | \
     ipaddr( vxflex_mdm_cidr ) }}"
+  when: "'mdm' in group_names"
   tags:
     - create_cluster
 
@@ -33,6 +50,7 @@
   set_fact:
     mdm_public_ip: "{{ ansible_facts['all_ipv4_addresses'] | \
     ipaddr( vxflex_mdm_public_cidr ) }}"
+  when: "'mdm' in group_names"
   tags:
     - create_cluster
 
@@ -57,8 +75,68 @@
   --approve_certificate'
   register: results
   when:
-    - "master_output.status == 428"
-    - "'master' in group_names"
+    - "inital_output.status == 428"
+    - ansible_facts.ansible_default_ipv4 == Master[0]
+  tags:
+    - create_cluster
+
+- name: "Query MDM Cluster to get Ids"
+  uri:
+    url: "https://{{ vxflex_gateway_ip }}:{{ vxflex_gateway_https_port }}\
+    /api/instances/System/queryMdmCluster"
+    return_content: yes
+    method: POST
+    body: {}
+    body_format: json
+    validate_certs: False
+    status_code:
+      - 200
+      - 201
+      - 202
+      - 428
+  register: master_output
+  run_once: True
+  when: "'mdm' in group_names"
+  tags:
+    - create_cluster
+
+- name: "Gather standby mdm nodes"
+  set_fact:
+    standbyMDMs: "{{ master_output.json | json_query(query) }}"
+  vars:
+    query: "standbyMDMs[].name"
+  when:
+    - master_ouput.json.standbyMDMs is defined
+  tags:
+    - create_cluster
+
+- name: "Gather master mdm nodes"
+  set_fact:
+    master: "{{ master_output.json | json_query(query) }}"
+  vars:
+    query: "master[].name"
+  when:
+    - master_ouput.json.master is defined
+  tags:
+    - create_cluster
+
+- name: "Gather tieBreaker mdm nodes"
+  set_fact:
+    tieBreakers: "{{ master_output.json | json_query(query) }}"
+  vars:
+    query: "tieBreakers[].name"
+  when:
+    - master_ouput.json.tieBreakers is defined
+  tags:
+    - create_cluster
+
+- name: "Gather slave mdm nodes"
+  set_fact:
+    slaves: "{{ master_output.json | json_query(query) }}"
+  vars:
+    query: "slaves[].name"
+  when:
+    - master_ouput.json.slaves is defined
   tags:
     - create_cluster
 
@@ -123,7 +201,7 @@
   tags:
     - create_cluster
 
-- name: "Add Slave MDM to cluster"
+- name: "Add Standby MDM to cluster"
   uri:
     url: "https://{{ vxflex_gateway_ip }}:{{ vxflex_gateway_https_port }}\
     /api/instances/System/action/addStandbyMdm"
@@ -134,7 +212,7 @@
     "managementIps":"{{ mdm_public_ip }}",
     "virtIpIntfs":["{{ ansible_default_ipv4.interface }}"],
     "name":"{{ ansible_facts['nodename'] }}",
-    "role":"Manager"}
+    "role":"{{ role }}"}
     force_basic_auth: yes
     body_format: json
     validate_certs: False
@@ -142,61 +220,20 @@
       - 200
       - 201
       - 202
-  register: slave_results
-  vars:
-    added_standby: "{{ master_output | to_json | from_json | json_query(sb) }}"
-    added_slave: "{{ master_output | to_json | from_json | json_query(sl) }}"
-    sb: "standbyMDMs[?contains(name, '{{ ansible_facts.nodename }}')]"
-    sl: "slaves[?contains(name, '{{ ansible_facts.nodename }}')]"
+  register: mdm_results
   when:
-    - "'standby' in group_names"
-    - ("master_output.status == 428") or
-      ("added_standby|length == 0" and "added_slave|length == 0")
-  changed_when: slave_results.status == 200
+    - "'mdm' in group_names"
+    - not ansible_facts.nodename in tieBreakers
+    - not ansible_facts.nodename in master
+    - not ansible_facts.nodename in slaves
+    - not ansible_facts.nodename in standbyMDMs
+  changed_when: mdm_results.status == 200
   tags:
     - create_cluster
 
 - name: "Display standby add results"
   debug:
-    var: slave_results
-  tags:
-    - debug
-
-- name: "Add TieBreaker MDM to cluster"
-  uri:
-    url: "https://{{ vxflex_gateway_ip }}:{{ vxflex_gateway_https_port }}\
-    /api/instances/System/action/addStandbyMdm"
-    method: POST
-    user: "{{ vxflex_gateway_username }}"
-    password: "{{ auth.json }}"
-    body: {"ips":"{{ mdm_private_ip }}",
-    "managementIps":"{{ mdm_public_ip }}",
-    "name":"{{ ansible_facts['nodename'] }}",
-    "role":"TieBreaker"}
-    force_basic_auth: yes
-    body_format: json
-    validate_certs: False
-    status_code:
-      - 200
-      - 201
-      - 202
-  register: tiebreaker_results
-  changed_when: tiebreaker_results.status == 200
-  vars:
-    added_standby: "{{ master_output | to_json | from_json | json_query(sb) }}"
-    added_tiebreaker: "{{ master_output | to_json | from_json | json_query(tb) }}"
-    sb: "standbyMDMs[?contains(name, '{{ ansible_facts.nodename }}')]"
-    tb: "tieBreakers[?contains(name, '{{ ansible_facts.nodename }}')]"
-  when:
-    - "'tiebreaker' in group_names"
-    - ("master_output.status == 428") or
-      ("added_standby|length == 0" and "added_tiebreaker|length == 0")
-  tags:
-    - create_cluster
-
-- name: "Print out adding tiebreaker results"
-  debug:
-    var: tiebreaker_results
+    var: mdm_results
   tags:
     - [ never, debug ]
 
@@ -213,17 +250,15 @@
       - 200
       - 201
       - 202
-  register: output
+  register: cluster_output
   run_once: True
-  when:
-    - ("master_output.status == 428") or
-      ("master_output.json.clusterMode == 'OneNode'")
+  when: "master_output.json.clusterMode == 'OneNode'"
   tags:
     - create_cluster
 
 - name: "MDM Cluster Ids output"
   debug:
-    var: output
+    var: cluster_output
   tags:
     - [ never, debug ]
 
@@ -234,9 +269,11 @@
     method: POST
     user: "{{ vxflex_gateway_username }}"
     password: "{{ auth.json }}"
-    body: {"mode":"ThreeNodes",
-    "addSlaveMdmIdList":["{{ output.json.standbyMDMs[0].id }}"],
-    "addTBIdList":["{{ output.json.standbyMDMs[1].id }}"]}
+    body: {
+    "mode":"ThreeNodes",
+    "addSlaveMdmIdList":"{{ mdmManager }}",
+    "addTBIdList":"{{ mdmTiebreaker }}"
+    }
     force_basic_auth: yes
     body_format: json
     validate_certs: False
@@ -245,16 +282,16 @@
       - 201
       - 202
   run_once: True
-  vars:
-    added_standby: "{{ master_output | to_json | from_json | json_query(sb) }}"
-    added_tiebreaker: "{{ master_output | to_json | from_json | json_query(tb) }}"
-    sb: "standbyMDMs[?contains(name, '{{ ansible_facts.nodename }}')]"
-    tb: "tieBreakers[?contains(name, '{{ ansible_facts.nodename }}')]"
-  register: cluster_output
+  register: final_output
   changed_when: "cluster_output.status == 200"
+  vars:
+    mdmManager: "{{ cluster_output.json | json_query(managers_query) }}"
+    managers_query: "standbyMDMs[?role == 'Manager'].id | [:1]"
+    mdmTiebreaker: "{{ cluster_output.json | json_query(tiebreaker_query) }}"
+    tiebreaker_query: "standbyMDMs[?role == 'TieBreaker'].id | [:1]"
   when:
-    - ("master_output.json.clusterMode == 'OneNode'") or
-      ("master_output.status == 428") or
-      ("output.json.standbyMDMs|length > 1")
+    - "master_output.json.clusterMode == 'OneNode'"
+    - groups.Manager | length > 0
+    - groups.TieBreaker | length > 0
   tags:
     - create_cluster
