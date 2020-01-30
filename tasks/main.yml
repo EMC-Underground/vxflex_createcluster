@@ -262,6 +262,13 @@
   tags:
     - [ never, debug ]
 
+- name: "Setting current cluster mode fact"
+  set_fact:
+    current_cluster_mode: "{{ cluster_output.json.clusterMode }}"
+  run_once: True
+  tags:
+    - create_cluster
+
 - name: "Count how many managers"
   set_fact:
     manager_count: "{{ groups.Manager | length }}"
@@ -278,10 +285,46 @@
 
 - name: "determine cluster mode"
   set_fact:
-    cluster_mode: ""{{ 'OneNode' if
+    target_cluster_mode: "OneNode"
+    required_slaves: 0
+    required_tiebreakers: 0
   run_once: True
+  when:
+    - groups.mdm | length >= 1
+    - groups.Manager | length >= 1
   tags:
     - create_cluster
+
+- name: "determine cluster mode"
+  set_fact:
+    target_cluster_mode: "ThreeNodes"
+    required_slaves: 1
+    required_tiebreakers: 1
+  run_once: True
+  when:
+    - groups.mdm | length >= 3
+    - groups.Manager | length >= 2
+    - groups.TieBreaker | length >= 1
+  tags:
+    - create_cluster
+
+- name: "determine cluster mode"
+  set_fact:
+    target_cluster_mode: "FiveNodes"
+    required_slaves: {% if current_cluster_mode == "OneNode" %}2{% elif current_cluster_mode == "ThreeNodes" %}1{% else %}0{% endif %}
+    required_tiebreakers: {% if current_cluster_mode == "OneNode" %}2{% elif current_cluster_mode == "ThreeNodes" %}1{% else %}0{% endif %}
+  run_once: True
+  when:
+    - groups.mdm | length >= 5
+    - groups.Manager | length >= 3
+    - groups.TieBreaker | length >= 2
+  tags:
+    - create_cluster
+
+- name: "build add slave list"
+  set_fact:
+    add_slave_list: "{{ (groups.Manager | difference(master) | difference(slaves))[:required_slaves] }}"
+    add_tiebreaker_list: "{{ (groups.TieBreaker | difference(tieBreakers))[:required_TieBreaker] }}"
 
 - name: "Change to 3 node cluster"
   uri:
@@ -305,14 +348,8 @@
   run_once: True
   register: final_output
   changed_when: "cluster_output.status == 200"
-  vars:
-    mdmManager: "{{ cluster_output.json | json_query(managers_query) }}"
-    managers_query: "standbyMDMs[?role == 'Manager'].id | [:1]"
-    mdmTiebreaker: "{{ cluster_output.json | json_query(tiebreaker_query) }}"
-    tiebreaker_query: "standbyMDMs[?role == 'TieBreaker'].id | [:1]"
   when:
-    - "master_output.json.clusterMode == 'OneNode'"
+    - not (current_cluster_mode == 'FiveNodes')
     - groups.Manager | length > 0
-    - groups.TieBreaker | length > 0
   tags:
     - create_cluster
