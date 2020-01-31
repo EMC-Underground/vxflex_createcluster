@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.com/EMC-Underground/vxflex_createcluster.svg?branch=master)](https://travis-ci.com/EMC-Underground/vxflex_createcluster)
 Role Name
 =========
 

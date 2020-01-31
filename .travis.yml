@@ -36,5 +36,3 @@ notifications:
     on_success: always # default: change
     on_failure: always # default: always
 
-notifications:
-  slack: underground-collab:TOL2vnKU35RPWigEw0Ivfw8V
