@@ -265,7 +265,7 @@
 
 - name: add virt interface to payload if Manager
   set_fact:
-    add_mdm_body: "{{ add_mdm_body | combine({"virtIpIntfs": [ ansible_default_ipv4.interface ]}) }}"
+    add_mdm_body: '{{ add_mdm_body | combine({"virtIpIntfs": [ ansible_default_ipv4.interface ]}) }}'
   tags:
     - create_cluster
 
