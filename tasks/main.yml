@@ -1,6 +1,6 @@
 - name: "Query MDM Cluster to get Ids"
   uri:
-    url: "https://{{ groups.gateway[0] }}:{{ vxflex_gateway_https_port }}\
+    url: "https://{{ vxflex_gateway_ip }}:{{ vxflex_gateway_https_port }}\
     /api/instances/System/queryMdmCluster"
     return_content: yes
     method: POST
@@ -421,7 +421,7 @@
   tags:
     - [ never, debug ]
 
-- name: "Change to 3 node cluster"
+- name: "Change to {{ target_cluster_mode }} cluster"
   uri:
     url: "https://{{ vxflex_gateway_ip }}:{{ vxflex_gateway_https_port }}\
     /api/instances/System/action/switchClusterMode"
