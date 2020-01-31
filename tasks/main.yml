@@ -40,13 +40,6 @@
   tags:
     - create_cluster
 
-- name: debug hostvars
-  debug:
-    var: hostvars[item]
-  with_items: "{{ groups.mdm }}"
-  tags:
-    [ never, debug ]
-
 - name: Add node to specified group
   add_host:
     name: "{{ hostvars[item]['ansible_facts']['default_ipv4']['address'] }}"
@@ -55,6 +48,20 @@
   when: "'mdm' in group_names"
   tags:
     - create_cluster
+
+- name: Print out Managers group membership
+  debug:
+    var: groups.Manager
+  run_once: True
+  tags:
+    - [ never, debug ]
+
+- name: Print out TieBreakers group membership
+  debug:
+    var: groups.TieBreaker
+  run_once: True
+  tags:
+    - [ never, debug ]
 
 - name: "Find MDM Private Ip's"
   set_fact:
@@ -124,9 +131,16 @@
   vars:
     query: "standbyMDMs[].name"
   when:
-    - master_ouput.json.standbyMDMs is defined
+    - master_output.json.standbyMDMs is defined
   tags:
     - create_cluster
+
+- name: Print out current standbyMDMs
+  debug:
+    var: standbyMDMs
+  run_once: True
+  tags:
+    - [ never, debug ]
 
 - name: "Gather master mdm nodes"
   set_fact:
@@ -134,9 +148,16 @@
   vars:
     query: "master[].name"
   when:
-    - master_ouput.json.master is defined
+    - master_output.json.master is defined
   tags:
     - create_cluster
+
+- name: Print out current master
+  debug:
+    var: master
+  run_once: True
+  tags:
+    - [ never, debug ]
 
 - name: "Gather tieBreaker mdm nodes"
   set_fact:
@@ -144,9 +165,16 @@
   vars:
     query: "tieBreakers[].name"
   when:
-    - master_ouput.json.tieBreakers is defined
+    - master_output.json.tieBreakers is defined
   tags:
     - create_cluster
+
+- name: Print out current tieBreakers
+  debug:
+    var: tieBreakers
+  run_once: True
+  tags:
+    - [ never, debug ]
 
 - name: "Gather slave mdm nodes"
   set_fact:
@@ -154,9 +182,16 @@
   vars:
     query: "slaves[].name"
   when:
-    - master_ouput.json.slaves is defined
+    - master_output.json.slaves is defined
   tags:
     - create_cluster
+
+- name: Print out current slaves
+  debug:
+    var: slaves
+  run_once: True
+  tags:
+    - [ never, debug ]
 
 - name: "Get ScaleIO token for Auth"
   uri:
