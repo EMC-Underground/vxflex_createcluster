@@ -23,9 +23,20 @@
   tags:
     - [ never, debug ]
 
+- name: "Slurp remote vxflex cfg.txt file"
+  fetch:
+    src: /opt/emc/scaleio/mdm/cfg/conf.txt
+    dest: "/tmp/mdm_{{ inventory_hostname }}.txt"
+  when: "'mdm' in group_names"
+  tags:
+    - create_cluster
+
 - name: "Determine if node is a manager"
   set_fact:
-    role: "{{ 'Manager' if (lookup('ini', 'actor_role_is_manager type=properties file=/opt/emc/scaleio/mdm/cfg/conf.txt') | bool) else 'TieBreaker' }}"
+    role: "{{ 'Manager' if (lookup('ini',\
+    'actor_role_is_manager type=properties\
+    file=/tmp/mdm_{{ inventory_hostname }}.txt') | bool)\
+    else 'TieBreaker' }}"
   tags:
     - create_cluster
   when: "'mdm' in group_names"
