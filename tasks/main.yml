@@ -254,6 +254,21 @@
   tags:
     - create_cluster
 
+- name: create addStandbyMDM body
+  set_fact:
+    add_mdm_body: '{"ips": "{{ mdm_private_ip }}",
+     "managementIps":"{{ mdm_public_ip }}",
+     "name":"{{ ansible_facts['nodename'] }}",
+     "role":"{{ role }}"'
+  tags:
+    - create_cluster
+
+- name: add virt interface to payload if Manager
+  set_fact:
+    add_mdm_body: "{{ add_mdm_body | combine({"virtIpIntfs": [ ansible_default_ipv4.interface ]}) }}"
+  tags:
+    - create_cluster
+
 - name: "Add Standby MDM to cluster"
   uri:
     url: "https://{{ vxflex_gateway_ip }}:{{ vxflex_gateway_https_port }}\
@@ -261,11 +276,7 @@
     method: POST
     user: "{{ vxflex_gateway_username }}"
     password: "{{ auth.json }}"
-    body: {"ips": "{{ mdm_private_ip }}",
-    "managementIps":"{{ mdm_public_ip }}",
-    "virtIpIntfs":["{{ ansible_default_ipv4.interface }}"],
-    "name":"{{ ansible_facts['nodename'] }}",
-    "role":"{{ role }}"}
+    body: "{{ add_mdm_body }}"
     force_basic_auth: yes
     body_format: json
     validate_certs: False
