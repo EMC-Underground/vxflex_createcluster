@@ -40,9 +40,9 @@
   tags:
     - create_cluster
 
-- name: Add "{{ ansible_facts.ansible_default_ipv4 }}" to "{{ role }}"
+- name: Add "{{ ansible_default_ipv4 }}" to "{{ role }}"
   add_host:
-    name: "{{ ansible_facts.ansible_default_ipv4 }}"
+    name: "{{ ansible_default_ipv4 }}"
     groups: "{{ role }}"
   tags:
     - create_cluster
