@@ -258,7 +258,7 @@
   set_fact:
     add_mdm_body: '{"ips": "{{ mdm_private_ip }}",
      "managementIps":"{{ mdm_public_ip }}",
-     "name":"{{ ansible_facts['nodename'] }}",
+     "name":"{{ ansible_facts.nodename }}",
      "role":"{{ role }}"'
   tags:
     - create_cluster
