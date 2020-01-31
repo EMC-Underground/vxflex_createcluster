@@ -42,8 +42,8 @@
 
 - name: Add node to specified group
   add_host:
-    name: "{{ hostvars.item.ansible_default_ipv4.address }}"
-    groups: "{{ hostvars.item.role }}"
+    name: "{{ hostvars[item]['ansible_default_ipv4.address'] }}"
+    groups: "{{ hostvars[item]['role'] }}"
   with_items: "{{ groups.mdm }}"
   when: "'mdm' in group_names"
   tags:
