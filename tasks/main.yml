@@ -33,11 +33,10 @@
 
 - name: "Determine if node is a manager"
   set_fact:
-    role: "{% if {{ item | bool }} %}Manager{% else %}TieBreaker{% endif %}"
+    role: "{% if item | bool %}Manager{% else %}TieBreaker{% endif %}"
   when: "'mdm' in group_names"
   with_ini:
-    - "actor_role_is_manager type=properties\
-    file=/tmp/{{ inventory_hostname }}/opt/emc/scaleio/mdm/cfg/conf.txt"
+    - "actor_role_is_manager type=properties file=/tmp/{{ inventory_hostname }}/opt/emc/scaleio/mdm/cfg/conf.txt"
   tags:
     - create_cluster
 
