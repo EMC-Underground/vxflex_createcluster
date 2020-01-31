@@ -345,7 +345,7 @@
 
 - name: "Count how many tiebreakers"
   set_fact:
-    tiebreaker_count: "{{ groups.TieBreakers | length }}"
+    tiebreaker_count: "{{ groups.TieBreaker | length }}"
   run_once: True
   tags:
     - create_cluster
@@ -404,8 +404,8 @@
 
 - name: "build add slave list"
   set_fact:
-    add_slave_list: "{{ (groups.Manager | difference(master) | difference(slaves))[:required_slaves] }}"
-    add_tiebreaker_list: "{{ (groups.TieBreaker | difference(tieBreakers))[:required_TieBreaker] }}"
+    add_slave_list: "{{ (groups.Manager | difference(master) | difference(slaves))[:required_slaves] | default([]) }}"
+    add_tiebreaker_list: "{{ (groups.TieBreaker | difference(tieBreakers))[:required_TieBreaker] | default([]) }}"
 
 - name: Print slaves to add
   debug:
