@@ -40,13 +40,14 @@
   tags:
     - create_cluster
 
-- name: Add "{{ ansible_default_ipv4.address }}" to "{{ role }}"
+- name: Add node to specified group
   add_host:
-    name: "{{ ansible_default_ipv4.address }}"
-    groups: "{{ role }}"
+    name: "{{ hostvars.item.ansible_default_ipv4.address }}"
+    groups: "{{ hostvars.item.role }}"
+  with_items: "{{ groups.mdm }}"
+  when: "'mdm' in group_names"
   tags:
     - create_cluster
-  when: "'mdm' in group_names"
 
 - name: "Find MDM Private Ip's"
   set_fact:
@@ -86,7 +87,7 @@
   register: results
   when:
     - "initial_output.status == 428"
-    - ansible_facts.ansible_default_ipv4 == Manager[0]
+    - "inventory_hostname == groups.Manager[0]"
   tags:
     - create_cluster
 
