@@ -256,16 +256,18 @@
 
 - name: create addStandbyMDM body
   set_fact:
-    add_mdm_body: '{"ips": "{{ mdm_private_ip }}",
+    add_mdm_body: {"ips": "{{ mdm_private_ip }}",
      "managementIps":"{{ mdm_public_ip }}",
      "name":"{{ ansible_facts.nodename }}",
-     "role":"{{ role }}"'
+     "role":"{{ role }}"}
   tags:
     - create_cluster
 
 - name: add virt interface to payload if Manager
   set_fact:
     add_mdm_body: '{{ add_mdm_body | combine({"virtIpIntfs": [ ansible_default_ipv4.interface ]}) }}'
+  when:
+    - "'Manager' in group_names"
   tags:
     - create_cluster
 
@@ -416,7 +418,7 @@
 - name: "build add slave list"
   set_fact:
     add_slave_list: "{{ (groups.Manager | difference(master) | difference(slaves))[:required_slaves] | default([]) }}"
-    add_tiebreaker_list: "{{ (groups.TieBreaker | difference(tieBreakers))[:required_TieBreaker] | default([]) }}"
+    add_tiebreaker_list: "{{ (groups.TieBreaker | difference(tieBreakers))[:required_tiebreakers] | default([]) }}"
 
 - name: Print slaves to add
   debug:
