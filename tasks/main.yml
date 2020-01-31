@@ -1,6 +1,6 @@
 - name: "Query MDM Cluster to get Ids"
   uri:
-    url: "https://{{ vxflex_gateway_ip }}:{{ vxflex_gateway_https_port }}\
+    url: "https://{{ groups.gateway[0] }}:{{ vxflex_gateway_https_port }}\
     /api/instances/System/queryMdmCluster"
     return_content: yes
     method: POST
@@ -311,8 +311,8 @@
 - name: "determine cluster mode"
   set_fact:
     target_cluster_mode: "FiveNodes"
-    required_slaves: {% if current_cluster_mode == "OneNode" %}2{% elif current_cluster_mode == "ThreeNodes" %}1{% else %}0{% endif %}
-    required_tiebreakers: {% if current_cluster_mode == "OneNode" %}2{% elif current_cluster_mode == "ThreeNodes" %}1{% else %}0{% endif %}
+    required_slaves: "{% if current_cluster_mode == 'OneNode' %}2{% elif current_cluster_mode == 'ThreeNodes' %}1{% else %}0{% endif %}"
+    required_tiebreakers: "{% if current_cluster_mode == 'OneNode' %}2{% elif current_cluster_mode == 'ThreeNodes' %}1{% else %}0{% endif %}"
   run_once: True
   when:
     - groups.mdm | length >= 5
