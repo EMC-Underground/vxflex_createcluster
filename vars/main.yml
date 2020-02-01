@@ -6,3 +6,5 @@ master: []
 slaves: []
 tieBreakers: []
 add_mdm_body: {}
+add_slave_list: []
+add_tiebreaker_list: []

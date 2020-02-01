@@ -415,10 +415,27 @@
   tags:
     - [ never, debug ]
 
-- name: "build add slave list"
+- name: "build add slave id list"
   set_fact:
-    add_slave_list: "{{ (groups.Manager | difference(master) | difference(slaves))[:required_slaves] | default([]) }}"
-    add_tiebreaker_list: "{{ (groups.TieBreaker | difference(tieBreakers))[:required_tiebreakers] | default([]) }}"
+    add_slave_list: "{{ cluster_output.json | json_query(query) }}"
+  vars:
+    query: "standyMDMs[?role == 'Manager'].id | [:'{{ required_slaves }}']"
+  run_once: True
+  when:
+    - not (current_cluster_mode == target_cluster_mode)
+  tags:
+    - create_cluster
+
+- name: "build add tiebreaker id list"
+  set_fact:
+    add_tiebreaker_list: "{{ cluster_output.json | json_query(query) }}"
+  vars:
+    query: "standyMDMs[?role == 'TieBreaker'].id | [:'{{ required_tiebreakers }}']"
+  when:
+    - not (current_cluster_mode == target_cluster_mode)
+  run_once: True
+  tags:
+    - create_cluster
 
 - name: Print slaves to add
   debug:
@@ -443,8 +460,8 @@
     password: "{{ auth.json }}"
     body: {
     "mode":"{{ target_cluster_mode }}",
-    "addSlaveMdmIdList":"{{ mdmManager }}",
-    "addTBIdList":"{{ mdmTiebreaker }}"
+    "addSlaveMdmIdList":"{{ add_slave_list }}",
+    "addTBIdList":"{{ add_tiebreaker_list }}"
     }
     force_basic_auth: yes
     body_format: json
@@ -462,3 +479,9 @@
     - groups.Manager | length > 0
   tags:
     - create_cluster
+
+- name: debug final output
+  debug:
+    var: final_debug
+  tags:
+    - [ never, debug ]
