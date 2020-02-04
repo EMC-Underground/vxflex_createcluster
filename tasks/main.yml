@@ -20,6 +20,7 @@
 
 - debug:
     var: initial_output
+  run_once: True
   tags:
     - [ never, debug ]
 
@@ -81,11 +82,13 @@
 
 - debug:
     var: mdm_private_ip
+  run_once: True
   tags:
     - [ never, debug ]
 
 - debug:
     var: mdm_public_ip
+  run_once: True
   tags:
     - [ never, debug ]
 
@@ -334,6 +337,7 @@
 - name: "MDM Cluster Ids output"
   debug:
     var: cluster_output
+  run_once: True
   tags:
     - [ never, debug ]
 
@@ -492,5 +496,6 @@
 - name: debug final output
   debug:
     var: final_output
+  run_once: True
   tags:
     - [ never, debug ]
