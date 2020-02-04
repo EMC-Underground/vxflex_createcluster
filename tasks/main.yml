@@ -42,7 +42,7 @@
 
 - name: Add node to specified group
   add_host:
-    name: "{{ hostvars[item]['ansible_facts']['default_ipv4']['address'] }}"
+    name: "{{ item }}"
     groups: "{{ hostvars[item]['role'] }}"
   with_items: "{{ groups.mdm }}"
   when: "'mdm' in group_names"
@@ -429,7 +429,7 @@
   set_fact:
     add_slave_list: "{{ cluster_output.json | json_query(query) }}"
   vars:
-    query: "standyMDMs[?role == 'Manager'].id | [:'{{ required_slaves }}']"
+    query: "standbyMDMs[?role == 'Manager'].id | [:{{ required_slaves }}]"
   run_once: True
   when:
     - not (current_cluster_mode == target_cluster_mode)
@@ -440,7 +440,7 @@
   set_fact:
     add_tiebreaker_list: "{{ cluster_output.json | json_query(query) }}"
   vars:
-    query: "standyMDMs[?role == 'TieBreaker'].id | [:'{{ required_tiebreakers }}']"
+    query: "standyMDMs[?role == 'TieBreaker'].id | [:{{ required_tiebreakers }}]"
   when:
     - not (current_cluster_mode == target_cluster_mode)
   run_once: True
@@ -492,6 +492,6 @@
 
 - name: debug final output
   debug:
-    var: final_debug
+    var: final_output
   tags:
     - [ never, debug ]
