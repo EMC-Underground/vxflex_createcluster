@@ -105,6 +105,10 @@
   tags:
     - create_cluster
 
+- name: Waiting for node to register
+  pause:
+    seconds: 5
+
 - name: "Query MDM Cluster to get Ids"
   uri:
     url: "https://{{ vxflex_gateway_ip }}:{{ vxflex_gateway_https_port }}\
@@ -124,6 +128,12 @@
   when: "'mdm' in group_names"
   tags:
     - create_cluster
+
+- name: Display master_output
+  debug:
+    var: master_output
+  tags:
+    - [ never, debug ]
 
 - name: "Gather standby mdm nodes"
   set_fact:
