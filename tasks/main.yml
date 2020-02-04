@@ -132,6 +132,7 @@
 - name: Display master_output
   debug:
     var: master_output
+  run_once: True
   tags:
     - [ never, debug ]
 
