@@ -1,2 +1,6 @@
 ---
 # defaults file for vxflex_createcluster
+vxflex_gateway_https_port: 443
+vxflex_gateway_username: admin
+vxflex_gateway_pw: Password#1
+current_password: admin
