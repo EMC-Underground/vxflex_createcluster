@@ -1,3 +1,12 @@
+- name: Get Gateway IP address and set to fact
+  set_fact:
+    vxflex_gateway_ip: "{{ hostvars[item].ansible_default_ipv4.address | \
+    ipaddr(vxflex_mdm_public_cidr) }}"
+  with_items: "{{ groups.gateway }}"
+  when: "'mdm' in group_names"
+  tags:
+  - create_cluster
+
 - name: "Query MDM Cluster to get Ids"
   uri:
     url: "https://{{ vxflex_gateway_ip }}:{{ vxflex_gateway_https_port }}\
