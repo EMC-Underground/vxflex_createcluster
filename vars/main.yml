@@ -1,6 +1,5 @@
 ---
 # vars file for vxflex_createcluster
-current_password: admin
 standbyMDMs: []
 master: []
 slaves: []

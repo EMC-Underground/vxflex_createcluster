@@ -1,3 +1,12 @@
+- name: Get Gateway IP address and set to fact
+  set_fact:
+    vxflex_gateway_ip: "{{ hostvars[item].ansible_default_ipv4.address | \
+    ipaddr(vxflex_mdm_public_cidr) }}"
+  with_items: "{{ groups.gateway }}"
+  when: "'mdm' in group_names"
+  tags:
+  - create_cluster
+
 - name: "Query MDM Cluster to get Ids"
   uri:
     url: "https://{{ vxflex_gateway_ip }}:{{ vxflex_gateway_https_port }}\
@@ -20,6 +29,7 @@
 
 - debug:
     var: initial_output
+  run_once: True
   tags:
     - [ never, debug ]
 
@@ -81,11 +91,13 @@
 
 - debug:
     var: mdm_private_ip
+  run_once: True
   tags:
     - [ never, debug ]
 
 - debug:
     var: mdm_public_ip
+  run_once: True
   tags:
     - [ never, debug ]
 
@@ -105,6 +117,9 @@
   tags:
     - create_cluster
 
+- pause:
+    seconds: 5
+
 - name: "Query MDM Cluster to get Ids"
   uri:
     url: "https://{{ vxflex_gateway_ip }}:{{ vxflex_gateway_https_port }}\
@@ -118,14 +133,13 @@
       - 200
       - 201
       - 202
-      - 428
   register: master_output
   run_once: True
   when: "'mdm' in group_names"
   tags:
     - create_cluster
 
-- name: Print master_output
+- name: Display master_output
   debug:
     var: master_output
   run_once: True
@@ -332,6 +346,7 @@
 - name: "MDM Cluster Ids output"
   debug:
     var: cluster_output
+  run_once: True
   tags:
     - [ never, debug ]
 
@@ -437,7 +452,7 @@
   set_fact:
     add_tiebreaker_list: "{{ cluster_output.json | json_query(query) }}"
   vars:
-    query: "standyMDMs[?role == 'TieBreaker'].id | [:{{ required_tiebreakers }}]"
+    query: "standbyMDMs[?role == 'TieBreaker'].id | [:{{ required_tiebreakers }}]"
   when:
     - not (current_cluster_mode == target_cluster_mode)
   run_once: True
@@ -490,5 +505,6 @@
 - name: debug final output
   debug:
     var: final_output
+  run_once: True
   tags:
     - [ never, debug ]
