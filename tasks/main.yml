@@ -125,6 +125,13 @@
   tags:
     - create_cluster
 
+- name: Print master_output
+  debug:
+    var: master_output
+  run_once: True
+  tags:
+    - [ never, debug ]
+
 - name: "Gather standby mdm nodes"
   set_fact:
     standbyMDMs: "{{ master_output.json | json_query(query) }}"
