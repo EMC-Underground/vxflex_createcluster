@@ -89,19 +89,21 @@
   tags:
     - create_cluster
 
-- debug:
+- name: Print all mdm private IP's
+  debug:
     var: mdm_private_ip
   run_once: True
   tags:
     - [ never, debug ]
 
-- debug:
+- name: "Print all mdm public IP's"
+  debug:
     var: mdm_public_ip
   run_once: True
   tags:
     - [ never, debug ]
 
-- name: "Add MDM Master"
+- name: "Add First MDM Master"
   shell: 'scli --create_mdm_cluster \
   --master_mdm_ip {{ mdm_private_ip | join(",") }} \
   --master_mdm_management_ip {{ mdm_public_ip | join(",") }} \
