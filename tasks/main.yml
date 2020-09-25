@@ -6,6 +6,9 @@
   when: "'mdm' in group_names"
   tags:
   - create_cluster
+  - add_sds
+  - create_pdandsp
+  
 
 - name: "Query MDM Cluster to get Ids"
   uri:
