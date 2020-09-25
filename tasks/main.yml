@@ -8,6 +8,7 @@
   - create_cluster
   - add_sds
   - create_pdandsp
+  - sds_adddrives
   
 
 - name: "Query MDM Cluster to get Ids"
